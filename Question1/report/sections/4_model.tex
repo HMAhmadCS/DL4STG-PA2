@@ -1,0 +1,126 @@
+%----------------------------------------------------------------------
+\section{Model computations and design justification}
+%----------------------------------------------------------------------
+\textbf{Notation.} Nodes $\mathcal{V}=\{\mathrm{Res},\mathrm{T1},\mathrm{U},\mathrm{S1},\mathrm{S2},\mathrm{S3},\mathrm{S4}\}$;
+rain gauges $\mathcal{G}=\{\mathrm{R1},\mathrm{R2}\}$; stations $\mathcal{S}=\{\mathrm{S1},\dots,\mathrm{S4}\}$.
+$\mathcal{N}^{\uparrow}(i)$ is the set of sources with an edge into $i$ (Figure~\ref{fig:graph}).
+$x_{j,t}$ is the aligned feature vector of source $j$ at grid step $t$ (Table~\ref{tab:data}).
+$y_i(t)$ is the level of station $i$, $\tau^{+}=\tau+6\Delta$, and lags $\ell$ are counted in
+10-minute steps \emph{back from the target time} $\tau^{+}$.
+
+\subsection*{Main blocks}
+\textbf{(1) Per-source causal encoders} (learned). A causal dilated temporal convolution (TCN:
+kernel 3, dilations $1,2,\dots,32$, receptive field 127 steps $\ge L$), a source-type-specific
+projection to width $d$, and a learned node embedding $\mathbf{p}_j$:
+\begin{equation}
+\mathbf{z}_{j,t}=W^{(s)}_{\mathrm{proj}}\,\mathrm{TCN}^{(s)}\!\big(x_{j,\le t}\big)+\mathbf{p}_j\in\mathbb{R}^{d},\qquad t\le\tau ,
+\end{equation}
+where $s\in\{\text{level},\text{rain},\text{release}\}$ and the mask and age are input channels.
+Causality guarantees that $\mathbf{z}_{j,t}$ never sees data after $t$. The reservoir sequence is
+extended into the future with the announced schedule:
+$\mathbf{z}_{\mathrm{Res},\tau+h}=\mathrm{MLP}\big([Q^{\mathrm{sch}}_{\tau+h},a_{\tau+h},h]\big)$ for $h=1,\dots,6$.
+The latent node U has no sensor. Its sequence is a learned rainfall-runoff transform of both
+gauges, $\mathbf{z}_{\mathrm{U},t}=\mathrm{TCN}^{(\mathrm{U})}\big(x_{\mathrm{R1},\le t},x_{\mathrm{R2},\le t}\big)+\mathbf{p}_{\mathrm{U}}$,
+and it is trained only through its effect on S3 and S4.
+
+\textbf{(2a) Delay-attention layer} (learned weights on a physically restricted support). For an
+edge $j\to i$, the admissible lags are those in the travel-time window $\Lambda_{ij}$ (A8) that refer
+to known data:
+\begin{equation}
+\mathcal{A}_{ij}=\big\{\ell\in\Lambda_{ij}:\ \tau^{+}-\ell\Delta\le\tau\big\}\ \ (\ell\ge6)\ \text{for observed sources},\qquad
+\mathcal{A}_{\mathrm{Res},i}=\Lambda_{\mathrm{Res},i}\ \text{(schedule known)} .
+\end{equation}
+If $\Lambda_{ij}$ lies entirely below 6, i.e.\ the travel time is under one hour, then
+$\mathcal{A}_{ij}=\{6,\dots,6+3\}$: the most recent upstream state, whose TCN encoding contains
+its trend. The message is a soft choice of the arrival lag:
+\begin{align}
+\alpha_{ij,\ell}&=\operatorname*{softmax}_{\ell\in\mathcal{A}_{ij}}
+\frac{\big(W_Q\mathbf{z}_{i,\tau}\big)^{\!\top}W_K\big[\mathbf{z}_{j,\tau^{+}-\ell}\,\Vert\,\mathbf{e}_{ij}\,\Vert\,\phi(\ell)\big]}{\sqrt d},
+&\mathbf{m}_{ij}&=\sum_{\ell\in\mathcal{A}_{ij}}\alpha_{ij,\ell}\,W_V\mathbf{z}_{j,\tau^{+}-\ell},\\
+\beta_{ij}&=\operatorname*{softmax}_{j\in\mathcal{N}^{\uparrow}(i)}\mathbf{w}_\beta^{\!\top}\tanh\!\big(W_\beta[\mathbf{z}_{i,\tau}\Vert\mathbf{m}_{ij}\Vert\mathbf{e}_{ij}]\big),
+&\mathbf{h}^{(1)}_{i}&=\mathrm{LN}\Big(\mathbf{z}_{i,\tau}+\mathrm{MLP}\big(\textstyle\sum_{j\in\mathcal{N}^{\uparrow}(i)}\beta_{ij}\mathbf{m}_{ij}\big)\Big),
+\end{align}
+with $\phi(\ell)$ a learned lag embedding. The query $\mathbf{z}_{i,\tau}$ encodes the current
+state of the receiving station (its level and trend), so in high flow the attention moves to
+shorter lags. \emph{Changing travel times} are thus a learned mapping, and only the window
+$\Lambda_{ij}$ is a physical assumption. The weights $\beta_{ij}$ decide how much each upstream source
+contributes (for example T1 versus S1 for S2).
+
+\textbf{(2b) Downstream message passing on node states} (learned). One more layer on the
+current node states,
+$\mathbf{h}^{(2)}_{i}=\mathrm{LN}\big(\mathbf{h}^{(1)}_{i}+\mathrm{MLP}\big(\sum_{j\in\mathcal{N}^{\uparrow}(i)}\gamma_{ij}W_M\mathbf{h}^{(1)}_{j}\big)\big)$
+with attention weights $\gamma_{ij}$ computed like $\beta_{ij}$. It lets a station use what
+upstream nodes have already worked out about themselves. For example, S3 receives the summary of U
+(rain-driven inflow) and of S2 (its own upstream context).
+
+\textbf{(3) Fusion and forecast mapping.} For each station $i\in\mathcal{S}$, a GRU over its own
+encoded history gives $\mathbf{s}_i$. A gate decides how far to trust the graph context:
+\begin{equation}
+\mathbf{g}_i=\sigma\big(W_g[\mathbf{s}_i\Vert\mathbf{h}^{(2)}_i]\big),\qquad
+\mathbf{f}_i=\mathbf{g}_i\odot\mathbf{h}^{(2)}_i+(1-\mathbf{g}_i)\odot\mathbf{s}_i .
+\end{equation}
+The head predicts the \emph{change} over persistence (A9), scaled by $\sigma_i$, the training-set
+standard deviation of one-hour changes at station $i$, for each step $h=1..6$:
+\begin{equation}
+\hat y_{i,0.5}(\tau+h\Delta)=y_i(\tau^{\ast}_i)+\sigma_i\,\mathbf{w}_{h}^{\top}\mathbf{f}_i,\qquad
+\hat y_{i,0.5\pm0.4}=\hat y_{i,0.5}\pm\sigma_i\,\mathrm{softplus}\big(\mathbf{w}^{\pm\top}_{h}\mathbf{f}_i\big),
+\end{equation}
+where $y_i(\tau^{\ast}_i)$ is the last valid level. The softplus offsets prevent quantile crossing.
+The published forecast is $h=6$.
+
+\textbf{(4) Training objective.}
+\begin{equation}
+\mathcal{L}=\frac{1}{|B|}\sum_{b\in B}\sum_{i\in\mathcal{S}}\sum_{h=1}^{6}\omega_{b}\,w_h\,M_{b,i,h}
+\sum_{q\in\{0.1,0.5,0.9\}}\rho_q\!\left(\frac{y_i(\tau_b+h\Delta)-\hat y_{i,q}(\tau_b+h\Delta)}{\sigma_i}\right)
++\lambda\,\mathcal{R}_{\mathrm{mono}},
+\end{equation}
+with the pinball loss $\rho_q(r)=\max(qr,(q-1)r)$; $w_6=1$ and $w_{h<6}=0.2$ (auxiliary steps);
+$M_{b,i,h}$ masking missing targets; $\omega_b=3$ for samples whose target exceeds the 95th
+percentile level (floods matter most for preparedness) and 1 otherwise; and the optional monotonicity
+penalty $\mathcal{R}_{\mathrm{mono}}=\mathbb{E}\big[\mathrm{ReLU}\big(-\partial\hat y_{i,0.5}/\partial Q^{\mathrm{sch}}\big)\big]$ (A9).
+Training uses chronological splits (A1), AdamW, early stopping on the validation pinball loss, and the
+missing/delay augmentation of Section~5.
+
+\subsection*{How each driver reaches a forecast}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \textbf{Upstream conditions.} S$k$ receives every upstream station through its own delay edge,
+at lags matching the travel time. These edges carry most of the one-hour signal at S2--S4.
+\item \textbf{Tributaries.} T1 is a node with lag windows into S2 (and onward to S3 and S4). The
+unmonitored tributary is the latent node U. It is driven by rainfall, mostly R2 (A10), and is
+implicitly calibrated by whatever part of S3's change S2 cannot explain, because this is the only
+way the loss can use it.
+\item \textbf{Rainfall.} Edges from R1 and R2 to their catchment nodes use lag windows covering
+runoff times (0--6\,h). Rain therefore acts directly as local runoff and indirectly through the
+upstream nodes and U.
+\item \textbf{Reservoir releases.} Past releases act through the Res node. Announced releases act
+through its future extension, and the lag window lets a release effective within the hour affect S1
+before $\tau^{+}$ if its travel time is short enough (Section~5).
+\end{itemize}
+
+\subsection*{Physical assumptions versus learned mappings}
+\textbf{Physical (fixed by design):} downstream edge directions (A7); lag windows from distances and
+celerity bounds (A8); the residual-over-persistence form and the monotonicity prior (A9); the
+existence of an unobserved inflow node between S2 and S3; and causality (no data after $\tau$, except
+announced releases). \textbf{Learned:} travel time as a function of state (the lag weights $\alpha$), the
+strength and attenuation of each influence ($W_V$, $\beta$, $\gamma$), the rainfall-runoff response,
+the latent tributary state, the gating between own history and context, and the uncertainty
+(quantiles). We do not hard-code a hydraulic model such as Muskingum or Saint-Venant, because its
+parameters are not supplied; Section~6 describes how one can be added.
+
+\subsection*{Justification of the main choices}
+\begin{enumerate}[leftmargin=*,itemsep=1pt]
+\item \textbf{Reach.} A forecaster cannot use information that is outside its reach, measured in hops
+and in time (as the companion notebook shows). Transitive delay edges connect every upstream source
+to every station within one layer, and the 12\,h window covers the longest admissible travel time.
+A stack of single-hop layers would need at least four layers to bring reservoir information to S4.
+\item \textbf{Bounded lag attention} is cheap, interpretable (the attention peak is an estimated
+travel time, so the committee can inspect it), causal, and cannot use physically impossible lags.
+Compared with full space-time attention it has few free parameters, which suits a few years of
+data (A1).
+\item \textbf{Separate encoders projected to a common width} handle the different sampling
+(events versus grid) and feature sets of the sources (Figure~\ref{fig:arch}).
+\item \textbf{Residual forecasting with gating} keeps persistence as a safe default. If upstream
+inputs are missing, the gate falls back to the station's own history.
+\item \textbf{Quantile outputs} give decision-makers an interval that can be read directly, for
+example ``a 10\,\% chance that S3 exceeds the warning level within the hour''.
+\end{enumerate}
