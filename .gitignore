@@ -1,0 +1,35 @@
+# Python / environment
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Assignment handout PDF
+/*.pdf
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Downloaded data
+data/
+
+# Question 2 training artefacts, logs and generated results
+/Question2/checkpoints/
+/Question2/logs/
+/Question2/results/
+/Question2/figures/
+
+# Combined submission report (kept outside version control)
+/report/
