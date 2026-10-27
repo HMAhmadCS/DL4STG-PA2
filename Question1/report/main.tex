@@ -1,0 +1,39 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{caption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue!60!black, urlcolor=blue!60!black}
+
+\title{AI651 Assignment 2 -- Question 1\\River Forecasting Proposal}
+\date{Fall 2026}
+
+\begin{document}
+\maketitle
+
+\paragraph{Proposal in brief.}
+We propose a \emph{lag-aware directed spatio-temporal graph network} (LADS-GNN). Every data
+source is encoded on its own clock by a causal temporal encoder and projected to a common
+width $d$. The sources are then combined on a directed graph that follows the river: reservoir
+$\to$ S1 $\to$ S2 $\to$ S3 $\to$ S4, with the monitored tributary T1 joining S2 and a
+\emph{latent} node U standing for the unmonitored tributary that joins S3. Upstream information
+reaches a station through \emph{delay attention}, a soft choice over a physically bounded range of
+travel times whose weights depend on the current flow state, so variable travel times are learned
+rather than hard-coded. Every station is linked directly to every upstream source, so information
+from the reservoir can reach S4 in a single layer. Announced releases enter as known future inputs.
+For S1--S4, the model predicts the level one hour ahead as three quantiles (10\,\%, 50\,\%, 90\,\%)
+and is trained with a pinball loss. It has $\approx$0.3\,M parameters, and one forecast takes
+milliseconds on a CPU, far inside the 10-minute cycle.
+
+\input{sections/1_architecture}
+
+\end{document}

@@ -1,0 +1,109 @@
+%----------------------------------------------------------------------
+\section{Architecture diagram}
+%----------------------------------------------------------------------
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  src/.style={draw, rounded corners, fill=blue!8, align=center, minimum width=3.4cm, minimum height=1.05cm},
+  blk/.style={draw, rounded corners, fill=orange!12, align=center, minimum width=3.6cm, minimum height=1.05cm},
+  gnn/.style={draw, rounded corners, fill=green!10, align=center, minimum width=4.4cm, minimum height=1.05cm},
+  out/.style={draw, rounded corners, fill=red!10, align=center, minimum width=3.4cm, minimum height=1.05cm},
+  dim/.style={font=\scriptsize\ttfamily, text=black!70},
+  >={Stealth[length=2mm]}]
+% data sources
+\node[src] (lev) at (0,0)     {Water levels S1--S4, T1\\\scriptsize every 10 min};
+\node[src] (rain) at (0,-2.2) {Rainfall R1, R2\\\scriptsize own timestamps};
+\node[src] (rel) at (0,-4.4)  {Reservoir releases\\\scriptsize recorded, past};
+\node[src] (sch) at (0,-6.6)  {Announced schedule\\\scriptsize future releases};
+\node[src] (sta) at (0,-8.8)  {Static: locations,\\connectivity, distances};
+% alignment
+\node[blk] (al1) at (5.2,0)     {Align to 10-min grid\\(as of $\tau$) + mask, age};
+\node[blk] (al2) at (5.2,-2.2)  {Sum into 10-min bins\\by gauge time + mask, age};
+\node[blk] (al3) at (5.2,-4.4)  {Step function sampled\\at grid (effective time)};
+\node[blk] (al4) at (5.2,-6.6)  {As-of join: latest\\schedule announced $\le\tau$};
+\node[blk] (al5) at (5.2,-8.8)  {Edge list + features\\$d_{ij}$, lag window $\Lambda_{ij}$};
+% encoders (each ends with a linear projection to width d)
+\node[blk] (enc1) at (10.6,0)    {Level TCN (shared)\\+ node embedding\\$\to$ proj.\ to $d$};
+\node[blk] (enc2) at (10.6,-2.2) {Rain TCN (shared)\\+ gauge embedding\\$\to$ proj.\ to $d$};
+\node[blk] (encu) at (10.6,-3.9) {Latent-inflow TCN\\(node U, from R1, R2)};
+\node[blk] (enc3) at (10.6,-5.6) {Release TCN (past) $\Vert$\\MLP (future schedule)\\$\to$ proj.\ to $d$};
+% graph
+\node[gnn] (graph) at (16.4,-2.6) {\textbf{(a) Delay-attention layer}\\\scriptsize sequences $\to$ node states at $\tau$\\
+  \scriptsize edges: every upstream source $\to$ station\\\scriptsize lags restricted to $\Lambda_{ij}$, causal};
+\node[gnn] (mp) at (16.4,-5.0) {\textbf{(b) Downstream message}\\\textbf{passing on node states}};
+\node[gnn] (fuse) at (16.4,-7.3) {Select S1--S4 + gated fusion\\with own-history GRU state};
+% outputs
+\node[out] (head) at (22.0,-7.3) {Quantile head\\$\hat y_{i,q}=y_i(\tau)+\sigma_i\hat\delta_{i,q}$};
+\node[out] (fc) at (22.0,-9.6) {Forecasts S1--S4 at $\tau{+}60$ min\\$q\in\{0.1,0.5,0.9\}$};
+% arrows
+\draw[->] (lev) -- node[above, dim]{$B{\times}5{\times}L$} (al1);
+\draw[->] (rain) -- node[above, dim]{events} (al2);
+\draw[->] (rel) -- node[above, dim]{events} (al3);
+\draw[->] (sch) -- node[above, dim]{$(t_{ann},t_{eff},Q)$} (al4);
+\draw[->] (sta) -- (al5);
+\draw[->] (al1) -- node[above, dim]{$B{\times}5{\times}L{\times}4$} (enc1);
+\draw[->] (al2) -- node[above, dim]{$B{\times}2{\times}L{\times}3$} (enc2);
+\draw[->] (al2.south east) -- node[below, dim, sloped]{$B{\times}2{\times}L{\times}3$} (encu.west);
+\draw[->] (al3) -- node[above, dim, sloped]{$B{\times}1{\times}L{\times}4$} (enc3.west);
+\draw[->] (al4) -- node[below, dim, sloped]{$B{\times}1{\times}H{\times}2$} (enc3.west);
+\draw[->] (enc1) -- node[above, dim, sloped]{$B{\times}5{\times}L{\times}d$} (graph);
+\draw[->] (enc2) -- node[above, dim, sloped]{$B{\times}2{\times}L{\times}d$} (graph);
+\draw[->] (encu) -- node[above, dim, sloped]{$B{\times}1{\times}L{\times}d$} (graph);
+\draw[->] (enc3) -- node[below, dim, sloped]{$B{\times}1{\times}(L{+}H){\times}d$} (graph);
+\draw[->] (al5.east) -- ++(0.9,0) -- ++(0,-1.2) -| node[pos=0.25, below, dim]{$E{\times}d_e$} ([xshift=-2.6cm]graph.south);
+\draw[->] (graph) -- node[right, dim]{$B{\times}7{\times}d$} (mp);
+\draw[->] (mp) -- node[right, dim]{$B{\times}7{\times}d$} (fuse);
+\draw[->] (enc1.east) -- ++(0.5,0) |- node[pos=0.75, below, dim]{own history S1--S4} ([yshift=-0.3cm]fuse.west);
+\draw[->] (fuse) -- node[above, dim]{$B{\times}4{\times}d$} (head);
+\draw[->] (head) -- node[right, dim]{$B{\times}4{\times}3$} (fc);
+\end{tikzpicture}}
+\caption{LADS-GNN. $B$: batch of issuance times $\tau$; $L=72$ history steps (12\,h at
+$\Delta=10$\,min); $H=6$ future steps (1\,h); $d=64$ embedding width; $E$: number of directed edges.
+\textbf{Alignment:} every source is put on the issuance-anchored grid
+$\{\tau-71\Delta,\dots,\tau\}$ (and $\{\tau+\Delta,\dots,\tau+6\Delta\}$ for the announced schedule)
+before encoding. \textbf{Projection:} each encoder ends in a linear layer to width $d$, so
+sources with different raw features (4, 3, 4 and 2 channels) can be mixed in the graph.
+\textbf{Reshaping:} the graph works on 7 nodes (Res, T1, U, S1--S4); the 4 station rows are
+selected ($B{\times}7{\times}d\to B{\times}4{\times}d$) and the head outputs 3 quantiles per
+station ($B{\times}4{\times}3$). The own-history GRU path (bottom) is taken from the level
+encoder for S1--S4. The node graph is shown in Figure~\ref{fig:graph}.}
+\label{fig:arch}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small, >={Stealth[length=2mm]},
+  st/.style={circle, draw, fill=blue!10, minimum size=8mm, inner sep=0pt},
+  lat/.style={circle, draw, dashed, fill=gray!10, minimum size=8mm, inner sep=0pt},
+  rn/.style={rectangle, draw, fill=cyan!10, minimum size=6mm}]
+\node[rn] (res) at (0,0) {Res};
+\node[st] (s1) at (2,0) {S1};
+\node[st] (t1) at (3,1.5) {T1};
+\node[st] (s2) at (4,0) {S2};
+\node[lat] (u) at (5.5,1.5) {U};
+\node[st] (s3) at (6.5,0) {S3};
+\node[st] (s4) at (8.5,0) {S4};
+\node[rn] (r1) at (3,-1.6) {R1};
+\node[rn] (r2) at (5.5,-1.6) {R2};
+\foreach \a/\b in {res/s1,s1/s2,t1/s2,s2/s3,u/s3,s3/s4} \draw[->, thick] (\a) -- (\b);
+\draw[->, gray, bend left=25] (res) to (s2);
+\draw[->, gray, bend left=30] (res) to (s3);
+\draw[->, gray, bend left=35] (res) to (s4);
+\draw[->, gray, bend right=25] (s1) to (s3);
+\draw[->, gray, bend right=30] (s1) to (s4);
+\draw[->, gray, bend right=25] (s2) to (s4);
+\draw[->, gray, bend right=15] (t1) to (s3);
+\draw[->, gray, bend left=15] (u) to (s4);
+\draw[->, dotted] (r1) -- (s1); \draw[->, dotted] (r1) -- (s2); \draw[->, dotted] (r1) -- (t1);
+\draw[->, dotted] (r2) -- (s3); \draw[->, dotted] (r2) -- (s4);
+\draw[->, dashed, gray] (r1) to[bend right=10] (u); \draw[->, dashed, gray] (r2) -- (u);
+\end{tikzpicture}
+\caption{Directed graph used by the delay-attention layer. Black: physical river links. Grey:
+transitive edges from every upstream source to every downstream station, each with its own lag
+window, so the reach of one layer covers the whole basin. Dotted: rainfall-to-catchment edges
+(initial assignment from gauge locations, A10). Dashed: the latent node U has no sensor, and its
+sequence is produced from R1 and R2 by the latent-inflow encoder. All edges point downstream (A7).}
+\label{fig:graph}
+\end{figure}
