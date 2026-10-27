@@ -1,0 +1,82 @@
+%----------------------------------------------------------------------
+\section{Forecasting task and data specification}
+%----------------------------------------------------------------------
+\textbf{Issuance time.} $\tau$ is a 10-minute grid time (A6). A forecast is issued every
+$\Delta=10$\,min using only the data that have \emph{arrived} by $\tau$.
+
+\textbf{History window.} $L=72$ steps (12\,h): $\{\tau-71\Delta,\dots,\tau\}$. Twelve hours is longer
+than the largest admissible travel time from the reservoir to S4 (A8) plus the rainfall-runoff
+response, so the causes of everything that arrives at a station within the next hour lie inside
+the window.
+
+\textbf{Horizon.} One hour ahead, i.e.\ $h=6$ steps. The target time is $\tau^{+}=\tau+6\Delta$. The
+intermediate steps $\tau+\Delta,\dots,\tau+5\Delta$ are predicted as auxiliary outputs during
+training only, to give more training signal. The service publishes $\tau^{+}$.
+
+\textbf{Outputs.} For each station S1--S4, the 10\,\%, 50\,\% (point forecast) and 90\,\% quantiles of the
+water level at $\tau^{+}$, in metres above the gauge datum.
+
+\begin{table}[H]
+\centering\small
+\caption{Inputs and outputs for one batch. $B$ is the batch axis: each sample is one issuance
+time $\tau$, and the samples of a batch come from different dates. $L=72$, $H=6$; $E$ is the
+number of directed edges.}
+\label{tab:data}
+\begin{tabularx}{\textwidth}{@{}p{2.6cm}p{2.5cm}Xp{3.6cm}@{}}
+\toprule
+Tensor & Dimensions & Axis meanings & Time coverage / timestamps\\
+\midrule
+$\mathbf{Y}^{\mathrm{hist}}$ levels & $B\times5\times L\times4$ & batch; node (S1, S2, S3, S4, T1);
+history step; feature (level, 10-min level change, valid mask, age of last valid reading) &
+grid times $\tau-71\Delta\ldots\tau$, readings that arrived by $\tau$\\
+$\mathbf{P}$ rainfall & $B\times2\times L\times3$ & batch; gauge (R1, R2); history step; feature
+(rain in the 10-min bin, valid mask, age) & bins $(\tau-(l{+}1)\Delta,\ \tau-l\Delta]$ by gauge
+timestamp, $l=0..71$\\
+$\mathbf{Q}^{\mathrm{past}}$ releases & $B\times1\times L\times4$ & batch; reservoir; history step;
+feature (actual release, release scheduled for that time, valid mask, age) & grid times
+$\tau-71\Delta\ldots\tau$, by effective time\\
+$\mathbf{Q}^{\mathrm{sch}}$ schedule & $B\times1\times H\times2$ & batch; reservoir; future step;
+feature (scheduled release, time since announcement) & $\tau+\Delta\ldots\tau+6\Delta$ by effective
+time; only schedules announced at or before $\tau$\\
+$\mathbf{C}$ calendar & $B\times L\times2$ & batch; history step; (sin, cos of day of year) & as history\\
+$\mathbf{A}$, $\mathbf{e}$ static graph & $E\times2$, $E\times4$ & edge; (source, target) / edge features
+(distance, $\min\Lambda_{ij}$, $\max\Lambda_{ij}$, edge type). Shared by all samples (no batch axis) &
+time-invariant\\
+\midrule
+$\hat{\mathbf{Y}}$ forecast & $B\times4\times3$ & batch; station (S1--S4); quantile (0.1, 0.5, 0.9)
+& $\tau^{+}=\tau+6\Delta$\\
+$\hat{\mathbf{Y}}^{\mathrm{aux}}$ (training only) & $B\times4\times H\times3$ & batch; station; future
+step; quantile & $\tau+\Delta\ldots\tau+6\Delta$\\
+$\mathbf{Y}$ target & $B\times4\times H$ (+ mask) & batch; station; future step & $\tau+\Delta\ldots
+\tau+6\Delta$ (the service is scored on the last step)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Alignment across sampling times.} All sources are mapped onto the same
+issuance-anchored grid before encoding.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Levels} (S1--S4, T1) are already on the grid. A slot holds a reading only if the
+reading has arrived by $\tau$. Otherwise it is masked and filled with the last valid value, and
+its \emph{age} records how stale that value is.
+\item \emph{Rainfall} arrives as timestamped events or irregular totals. It is summed into 10-minute bins
+by \emph{measurement} time. Bins whose data have not yet arrived are masked.
+\item \emph{Releases} are step functions (A5), sampled at each grid time by their \emph{effective}
+time. The release that was scheduled for each past time is kept as a second channel, so the network
+can see how far the schedule and the actual release have differed.
+\item \emph{Announced schedule}: an ``as-of'' join takes, for each future step, the most recent
+schedule whose \emph{announcement} time is $\le\tau$. Later announcements are invisible, exactly as
+in operation, and a schedule announced before $\tau$ but effective after $\tau+60$\,min is irrelevant.
+\end{itemize}
+
+\textbf{Alignment across locations.} Locations are not interpolated onto a spatial grid. Each
+sensor is a graph node (S1--S4, T1), or feeds one (R1, R2 feed their catchment nodes and the latent
+node U). River geometry enters through the edge features and the lag windows $\Lambda_{ij}$
+derived from along-river distances (A8). Encoders are shared across sensors of the same type, a
+learned node embedding tells the sensors apart, and per-source linear projections bring every input
+to the same width $d$ before the graph layer combines them (Figure~\ref{fig:arch}).
+
+\textbf{Information available at issuance:} all history up to $\tau$ that has arrived, the latest
+announced release schedule up to $\tau+60$\,min, and the static data. \textbf{Not available:} future
+rainfall, future levels (including any reading not yet delivered), the unmonitored tributary inflow,
+and exact travel times.
