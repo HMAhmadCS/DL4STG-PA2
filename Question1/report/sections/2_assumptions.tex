@@ -1,0 +1,68 @@
+%----------------------------------------------------------------------
+\section{Assumptions}
+%----------------------------------------------------------------------
+\textbf{Supplied facts (not assumptions).} 10-minute water levels at S1--S4 and T1; rainfall at
+R1 and R2 with timestamps and gauge locations; recorded reservoir releases and announced future
+schedules with announcement and effective times; station locations, river connectivity and
+along-river distances. A monitored tributary (T1) joins between S1 and S2 and an unmonitored one
+between S2 and S3. Stations are unevenly spaced, travel times vary with conditions, precise
+travel times and the unmonitored inflow are not supplied, and future rainfall and future levels are
+unknown at issuance. Everything below is an assumption made because the brief leaves it open.
+
+\subsection*{Unspecified data conditions}
+\begin{description}[leftmargin=0.9cm, style=nextline]
+\item[A1 Record length.] At least three years of history are available for all sources and include
+several flood seasons. \emph{Why reasonable:} authorities normally keep multi-year telemetry archives.
+\emph{Effect on design:} enough events for a small ($\approx$0.3\,M parameter) model, but not for a large
+one; data are split chronologically (oldest years train, next season validation, most recent season
+test) so that no future information leaks into training.
+\item[A2 Reporting delays.] Level telemetry usually arrives within one 10-minute interval but can be up
+to 30\,min late; rain gauges report with up to 20\,min delay; reservoir releases are logged within
+10\,min. \emph{Why:} typical of radio/GSM telemetry. \emph{Effect:} every input is built ``as of''
+$\tau$ with an explicit \emph{age} feature, and training replays these delays (Section~5).
+\item[A3 Measurement quality.] Gauges share a common datum; level noise is a few centimetres;
+occasional spikes and flat-lines occur. \emph{Why:} standard for pressure/radar gauges.
+\emph{Effect:} range and rate-of-change checks flag bad readings, which are then treated as missing.
+\item[A4 Missingness.] Gaps are sporadic (a few \% of readings) and occasionally last hours; no
+station is missing for most of the record. \emph{Why:} sensors are maintained. \emph{Effect:} masks
+plus simple filling suffice; a permanently failed station needs retraining or a fallback model.
+\item[A5 Release semantics.] A release value (m$^3$/s) holds from its effective time until the next
+record (step function). Announced schedules are usually followed but can be revised or deviate
+(gate errors, emergency spills). \emph{Why:} how gate operations are logged. \emph{Effect:} scheduled
+and actual releases are separate inputs (Sections~4--5).
+\item[A6 Issuance timing.] Forecasts are issued at the grid times
+($\ldots$, hh:00, hh:10, $\ldots$) after a short collection cut-off (2\,min), and the target is the
+level recorded at $\tau+60$\,min. \emph{Why:} matches the 10-minute logging. \emph{Effect:} defines
+$\tau$ and the alignment grid (Section~3).
+\end{description}
+
+\subsection*{River dynamics the model assumes}
+\begin{description}[leftmargin=0.9cm, style=nextline]
+\item[A7 Downstream-only propagation.] There is no tidal influence or significant backwater from
+downstream structures on S1--S4. \emph{Why:} an inland river below a reservoir. \emph{Effect:} graph
+edges point downstream only, which removes spurious paths and is a strong inductive bias.
+\item[A8 Bounded, state-dependent travel times.] The travel time of a flood wave over a distance
+$d_{ij}$ is $d_{ij}/c$, with wave celerity $c$ between $c_{\min}=0.5$ and $c_{\max}=4$\,m/s, and $c$
+grows with discharge (faster in floods). \emph{Why:} the typical range for lowland and mid-gradient
+rivers. \emph{Effect:} edge $j\to i$ may only use lags in
+$\Lambda_{ij}=[\lfloor d_{ij}/(c_{\max}\Delta)\rfloor,\ \lceil d_{ij}/(c_{\min}\Delta)\rceil+3]$
+(10-minute steps, with a margin). Within $\Lambda_{ij}$ the weights are learned and depend on the
+current level (Section~4). Travel time is therefore learned, but physically impossible lags are
+excluded.
+\item[A9 Smooth, monotone response.] Over one hour, the level change at a station is dominated by
+recent upstream changes, routed inflows and local rainfall-runoff. More inflow never lowers the
+level downstream. \emph{Why:} mass conservation in an open channel. \emph{Effect:} we predict the
+change over persistence (residual form), and an optional penalty keeps the median forecast
+non-decreasing in the scheduled release.
+\item[A10 Rainfall representativeness.] From the gauge locations, R1 mainly drains to S1, S2 and T1,
+and R2 to the unmonitored tributary, S3 and S4. \emph{Why:} nearest-catchment assignment.
+\emph{Effect:} initial rainfall-to-node edges. Their weights are learned, so a wrong guess is
+down-weighted by the data.
+\item[A11 Stationary channel.] No major change of the river bed or the level--flow relation occurs within the
+record, and the authority reports such changes. \emph{Why:} short record. \emph{Effect:} one model
+for the whole record, with drift monitoring triggering retraining.
+\item[A12 Rain after issuance is secondary within one hour.] Rain that has fallen by $\tau$ dominates
+the one-hour response, and rain falling after $\tau$ matters mainly for the fastest catchments.
+\emph{Why:} runoff concentration times usually exceed one hour. \emph{Effect:} no rainfall forecast
+is required, and the remaining effect is absorbed by the upper quantile (Section~6).
+\end{description}
