@@ -1,0 +1,67 @@
+%----------------------------------------------------------------------
+\section{Operation and exceptional conditions}
+%----------------------------------------------------------------------
+\textbf{(i) Missing observations.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item Every value carries a mask bit and an age (Table~\ref{tab:data}). Missing levels are filled
+with the last valid value and missing rain with zero, so the network can see that the value is
+stale and is not misled by the fill.
+\item Training randomly drops single readings, whole hours and entire stations (10--20\,\% of
+samples), so the model learns to rely on neighbours, rainfall and the latent node when a sensor is
+silent. The gate in block (3) learns when the station's own history cannot be trusted.
+\item The forecast anchor $y_i(\tau^{\ast}_i)$ is the last valid reading. If a station has been
+silent for more than one hour, its forecast is still issued from upstream information but is
+flagged \emph{degraded}, and its quantile interval is wider (learned from the masked training
+samples).
+\item Missing targets are excluded from the loss ($M_{b,i,h}$) and never imputed for training.
+\end{itemize}
+
+\textbf{(ii) Delayed observations.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item Inputs are always assembled \emph{as of} $\tau$ (A2): a reading that has not arrived is
+treated as missing, with its age, and the system does not wait for it.
+\item When the late reading arrives, the next issuance ten minutes later uses it automatically,
+because the history window is rebuilt every cycle. Published forecasts are not rewritten. Each is
+archived with a snapshot of the data available when it was made, so later evaluation reflects what
+the system actually knew.
+\item Training replays the empirical delay distribution, so the model is trained with the same
+information it will have in operation. Training on the complete, cleaned archive would overstate
+accuracy.
+\end{itemize}
+
+\textbf{(iii) Announced future releases.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item The latest schedule announced at or before $\tau$ is placed on the future grid
+$\tau+\Delta..\tau+6\Delta$ by \emph{effective} time (as-of join, Section~3) and enters through the
+reservoir's future extension. It is the only input from after $\tau$.
+\item A ``time since announcement'' feature lets the model learn that recent announcements are
+more reliable than old ones.
+\item If no schedule covers part of the horizon, the last actual release is held (A5) and a mask
+bit marks the gap.
+\item A release takes time to reach a station. Only S1, and in floods possibly S2, can feel a release
+effective within the hour before $\tau^{+}$. The lag windows encode this, so a change in the
+announced schedule cannot implausibly affect S4 within the hour.
+\end{itemize}
+
+\textbf{(iv) Differences between scheduled and actual releases.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item For past steps, the model always sees the \emph{actual} release, plus the release that had
+been scheduled for that time as a separate channel ($\mathbf{Q}^{\mathrm{past}}$). It therefore
+learns how schedules and actual releases historically differ, and how much to trust them.
+\item As soon as a measured release departs from the schedule, the measured value replaces the
+schedule for all elapsed steps at the next issuance (at most ten minutes later). The current
+deviation, actual minus scheduled, is visible in the input and informs how much the remaining
+schedule is trusted.
+\item A deviation above an operational threshold triggers an operator alert, a wider interval, and
+an optional scenario forecast with the alternative release, which costs only one more forward pass.
+\item Training perturbs announced schedules (random offsets and time shifts relative to the actual
+releases), so the model does not over-trust announcements.
+\end{itemize}
+
+\textbf{Feasibility every ten minutes.} One forward pass handles 7 nodes, 2 gauges, 72 history
+steps, about 25 edges with at most 40 admissible lags each, and $d=64$. That is about $10^{7}$
+multiply-adds, i.e.\ a few milliseconds on one CPU core. Assembling the inputs takes a handful of
+database queries. Even an ensemble of five models plus a few release scenarios stays well under one
+second, which leaves almost all of the 10-minute cycle for data collection, quality control and
+dissemination. Training is offline (for example monthly, or after a reported channel change, A11)
+and takes minutes to hours on a single GPU.
