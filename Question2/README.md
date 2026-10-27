@@ -26,6 +26,10 @@ All commands below are run from `Question2/`.
 | `q2/train.py` | training protocol |
 | `q2/check_transforms.py` | Table 1 |
 | `q2/optical_flow.py` | Figure 1 |
+| `q2/evaluate.py` | E(5), E(2), MSE_h, consistency gaps C_T, transformed errors E_T, inference timing |
+| `q2/run_eval.py` | computes and caches all test metrics of a forecaster |
+| `q2/plots.py` | frame grids, animated GIFs, digit-overlap detection |
+| `q2/baseline.py` | Table 2, Figure 2 |
 
 ## Reproducing
 
@@ -33,6 +37,7 @@ All commands below are run from `Question2/`.
 python -m q2.check_transforms                 # Table 1
 python -m q2.optical_flow                     # Figure 1
 python -m q2.train --model A --seed 0         # and --seed 1
+python -m q2.baseline                         # Table 2, Figure 2
 ```
 
 Generated tables (`results/`), figures (`figures/`), checkpoints and training logs are not tracked.
