@@ -1,0 +1,77 @@
+%----------------------------------------------------------------------
+\section{Uncertainty, limitations, and additional information}
+%----------------------------------------------------------------------
+\subsection*{Uncertainties and limitations}
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}p{2.9cm}XX@{}}
+\toprule
+Uncertainty / limitation & Forecast impact & Response, or what remains unresolved\\
+\midrule
+Unmonitored tributary &
+Inflow between S2 and S3 is unknown. When it carries a flood that S2 does not see, S3 and then S4
+are under-predicted. &
+Latent node U driven by R1/R2 and calibrated by the unexplained part of S3's change; wider
+intervals at S3/S4. \emph{Unresolved:} a local storm missed by R2 is invisible until S3 itself
+starts to rise.\\
+Changing travel times &
+Fixed lags would arrive early in low flow and late in floods, mis-timing the peak. &
+State-dependent delay attention within physical windows (A8). \emph{Unresolved:} floods beyond the
+training range may exceed the assumed celerity bounds.\\
+Travel time shorter than the horizon &
+For short reaches (Res$\to$S1, possibly S1$\to$S2), the upstream signal that will arrive by
+$\tau^{+}$ has not been measured yet at $\tau$. &
+The model extrapolates the latest upstream trend (TCN state), and for S1 it uses the announced
+schedule. The remaining uncertainty is reflected in wider intervals.\\
+Future rainfall &
+Rain after $\tau$ can raise levels within the hour in fast catchments (A12). &
+Absorbed by the upper quantile. Resolvable with a rainfall nowcast (request 3).\\
+Release deviations &
+Over-trusting a schedule biases S1 and S2. &
+Separate scheduled and actual channels, deviation feature, alerts (Section~5).\\
+Sparse rain gauges &
+Two gauges cannot capture spatially variable rain. &
+Learned catchment weights. \emph{Unresolved} without radar or more gauges.\\
+Rare extremes &
+Few floods in a short record (A1). The model may under-predict peaks, which are the costliest errors. &
+Flood re-weighting, residual form, conservative 90\,\% quantile, and validation on every historical
+flood event separately.\\
+Distribution shift &
+Channel or level--flow changes (A11), new reservoir rules. &
+Drift monitoring of residuals and retraining.\\
+Model uncertainty &
+Aleatoric noise and epistemic error from limited data. &
+Quantile loss (aleatoric), an ensemble of five seeds (epistemic), and a check that the 10--90\,\%
+interval contains about 80\,\% of test outcomes.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{Additional information requests}
+Each item is optional. Without any of them the system remains usable, with lower accuracy or wider
+intervals.
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{Level--flow (rating) curves or discharge at S1--S4 and T1.} These convert levels to
+flows and allow mass-balance features. The S3 inflow not explained by S2 directly estimates the
+unmonitored tributary. \emph{Without it:} usable; the model works on levels.
+\item \textbf{Any measurements on the unmonitored tributary}, even a temporary gauge for one season.
+These would calibrate the latent node U. \emph{Without it:} usable; U stays latent.
+\item \textbf{Rainfall nowcasts (radar, 0--1\,h) and additional gauges.} These would reduce the
+largest remaining error, from rain after issuance and between gauges. \emph{Without it:} usable (A12).
+\item \textbf{Cross-sections or historical travel-time studies.} These give tighter lag windows
+than the generic celerity bounds. \emph{Without it:} usable, using A8.
+\item \textbf{Telemetry metadata} (reporting delays, maintenance logs, sensor changes). These make
+the delay simulation and quality flags realistic. \emph{Without it:} usable, with A2--A4.
+\item \textbf{Reservoir operating rules and the history of schedule revisions.} These would help
+model release deviations better. \emph{Without it:} usable.
+\item \textbf{Reservoir inflow and reservoir level.} These would help anticipate spills before they
+are announced. \emph{Without it:} usable.
+\end{enumerate}
+
+\subsection*{Treatment of physical relationships and uncertainty}
+No separate physical simulator is required. Physics enters through A7--A9: edge directions, lag
+windows and the residual and monotone form. Uncertainty enters through quantile outputs and a
+small ensemble. If rating curves and channel data are supplied (requests 1 and 4), a Muskingum
+routing of the reservoir release and of T1 can be run alongside, and its routed flow at each station
+added as an input channel. The network then learns a correction to the physical model (hybrid
+modelling), which matters most for floods outside the training range.
