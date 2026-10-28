@@ -1,4 +1,4 @@
-"""Forecasters: ConvLSTM baseline (model A) and the reference predictors.
+"""Forecasters: ConvLSTM baseline (model A), model D, the symmetriser and the reference predictors.
 
 Every forecaster maps X (B, 5, 1, 64, 64) -> Y_hat (B, 5, 1, 64, 64).
 """
@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .data import N_IN, N_OUT
+from .data import N_IN, N_OUT, apply_g, apply_g_inv
 
 
 class ConvLSTMCell(nn.Module):
@@ -68,8 +68,24 @@ def model_a():
     return ConvLSTMForecaster(patch=4, hidden=64, kernel_size=3, dilations=(1, 1))
 
 
+def model_d():
+    """Model D: model A on an 8x8 fold (8x8 grid); one 3x3 hop moves 8 px instead of 4."""
+    return ConvLSTMForecaster(patch=8, hidden=64, kernel_size=3, dilations=(1, 1))
+
+
 def build(arch):
-    return {"A": model_a}[arch]()
+    return {"A": model_a, "D": model_d}[arch]()
+
+
+class Symmetrised(nn.Module):
+    """f_bar(X) = 1/8 sum_g g^{-1}(f(g(X))) over the 8 elements of G (handout eq. 7)."""
+
+    def __init__(self, f):
+        super().__init__()
+        self.f = f
+
+    def forward(self, X):
+        return sum(apply_g_inv(self.f(apply_g(X, g)), g) for g in range(8)) / 8
 
 
 class Blank(nn.Module):

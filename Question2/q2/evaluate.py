@@ -6,7 +6,7 @@ import time
 import torch
 
 from .data import load_videos, mirror, rotate, to_float, window
-from .models import Blank, CopyLast, build
+from .models import Blank, CopyLast, Symmetrised, build
 from .train import CONFIGS
 from .utils import CKPT_DIR
 
@@ -15,7 +15,9 @@ TRANSFORMS = {"M": (mirror, mirror), "R": (rotate, lambda x: rotate(x, -1))}
 
 
 def load_model(name, seed):
-    """name is a learned model (see train.CONFIGS), Blank or CopyLast."""
+    """name is a learned model (see train.CONFIGS), sym-<learned model>, Blank or CopyLast."""
+    if name.startswith("sym-"):
+        return Symmetrised(load_model(name[4:], seed)).eval()
     if name == "Blank":
         return Blank()
     if name == "CopyLast":

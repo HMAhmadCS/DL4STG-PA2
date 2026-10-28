@@ -6,6 +6,8 @@ Model | architecture | training speeds      | symmetry augmentation
 A     | baseline     | 1x only              | none
 B     | baseline     | 1x only              | g ~ U(G)
 C     | baseline     | k ~ U{1, 2, 3}       | none
+D     | patch 8      | k ~ U{1, 2, 3}       | none
+DB    | patch 8      | k ~ U{1, 2, 3}       | g ~ U(G)
 """
 import argparse
 import json
@@ -22,6 +24,8 @@ CONFIGS = {
     "A": dict(arch="A", speed_aug=False, sym_aug=False),
     "B": dict(arch="A", speed_aug=False, sym_aug=True),
     "C": dict(arch="A", speed_aug=True, sym_aug=False),
+    "D": dict(arch="D", speed_aug=True, sym_aug=False),
+    "DB": dict(arch="D", speed_aug=True, sym_aug=True),
 }
 
 EPOCHS = 30
