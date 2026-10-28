@@ -65,6 +65,7 @@ def main():
     ap.add_argument("--epochs", type=int, default=EPOCHS)
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--tag", default="", help="suffix for checkpoint/log names (e.g. design trials)")
+    ap.add_argument("--resume", action="store_true", help="continue from the last completed epoch")
     args = ap.parse_args()
 
     if args.threads:
@@ -87,7 +88,21 @@ def main():
     log = {"name": name, "config": cfg, "params": n_params(model), "threads": torch.get_num_threads(),
            "epochs": []}
     log_dir = ensure(os.path.join(ROOT, "logs"))
-    for epoch in range(1, args.epochs + 1):
+
+    # Per-epoch state, so an interrupted run resumes to the same final weights.
+    last_path = os.path.join(ensure(CKPT_DIR), f"{name}_last.pt")
+    start = 1
+    if args.resume and os.path.exists(last_path):
+        st = torch.load(last_path, weights_only=False)
+        model.load_state_dict(st["state_dict"])
+        opt.load_state_dict(st["optimizer"])
+        gen.set_state(st["gen"])
+        torch.set_rng_state(st["torch_rng"])
+        log = st["log"]
+        start = st["epoch"] + 1
+        print(f"{name}: resumed after epoch {st['epoch']}", flush=True)
+
+    for epoch in range(start, args.epochs + 1):
         model.train()
         t0 = time.perf_counter()
         perm = torch.randperm(len(videos), generator=gen)
@@ -110,6 +125,9 @@ def main():
         print(f"{name} epoch {epoch:2d} train {tot / nb:.5f} val {vl:.5f} time {epoch_time:.1f}s", flush=True)
         with open(os.path.join(log_dir, f"{name}.json"), "w") as f:
             json.dump(log, f, indent=2)
+        torch.save({"state_dict": model.state_dict(), "optimizer": opt.state_dict(), "gen": gen.get_state(),
+                    "torch_rng": torch.get_rng_state(), "log": log, "epoch": epoch}, last_path + ".tmp")
+        os.replace(last_path + ".tmp", last_path)
 
     log["mean_epoch_time_s"] = sum(e["time_s"] for e in log["epochs"]) / len(log["epochs"])
     with open(os.path.join(log_dir, f"{name}.json"), "w") as f:
