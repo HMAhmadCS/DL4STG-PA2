@@ -85,6 +85,7 @@ def figure4(videos):
             ax.axvline(c[i], color="tab:red", ls="--")
             ax.annotate(str(9000 + i), (c[i], ax.get_ylim()[1] * (0.85 - 0.3 * j)), rotation=90, fontsize=7,
                         ha="right", color="tab:red")
+        ax.xaxis.set_major_locator(plt.MaxNLocator(5))
         ax.set_xlabel(f"per-video $C_{T}$")
         ax.set_ylabel("number of test videos")
         ax.set_title(f"({'a' if T == 'M' else 'b'}) $C_{T}$, model A seed 0 (mean {sig3(c.mean())})")

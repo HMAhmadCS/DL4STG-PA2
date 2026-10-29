@@ -22,7 +22,7 @@ All commands below are run from `Question2/`.
 | File | Purpose |
 |---|---|
 | `q2/data.py` | loading and splitting, the 8 symmetries G, speed windows |
-| `q2/models.py` | ConvLSTM (model A), model D (patch 8), the symmetrised forecaster, Blank and Copy-last |
+| `q2/models.py` | ConvLSTM (model A), model D (patch 8, Xavier init with forget-gate bias 1), the symmetrised forecaster, Blank and Copy-last |
 | `q2/train.py` | training protocol for A, B, C, D and D+B (`--resume` continues an interrupted run) |
 | `q2/check_transforms.py` | Table 1 |
 | `q2/optical_flow.py` | Figure 1 |
@@ -33,6 +33,8 @@ All commands below are run from `Question2/`.
 | `q2/test_baseline.py` | Tables 3-4, Figures 3-5 and the Figure 3 GIFs |
 | `q2/compare.py` | Tables 5-6 |
 | `q2/final.py` | Figure 6 and its GIFs |
+| `q2/positions.py` | digit centroids in the Figure 5 / 6(b) video (Q2.9, Q2.13, Figure 6b) |
+| `q2/latex_tables.py` | Tables 1-6 as LaTeX for the report |
 | `run_all.sh` | every step below in order, restartable |
 
 ## Reproducing
@@ -51,6 +53,8 @@ python -m q2.compare table5                   # Table 5
 python -m q2.run_eval sym-B sym-D sym-DB --timing
 python -m q2.compare table6 --final DB        # Table 6
 python -m q2.final --final D                  # Figure 6 (or --final DB)
+python -m q2.positions A C D sym-D            # digit positions in the Figure 5 video
+python -m q2.latex_tables                     # report/tables/table1-6.tex
 ```
 
 `sh run_all.sh` runs all of this in order with 12 threads and waits for the Q2.11 commit before
