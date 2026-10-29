@@ -68,9 +68,23 @@ def model_a():
     return ConvLSTMForecaster(patch=4, hidden=64, kernel_size=3, dilations=(1, 1))
 
 
+def xavier_forget1_(model):
+    """Xavier-uniform conv weights, zero biases, forget-gate biases 1 (chunk order i, f, o, g)."""
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            nn.init.xavier_uniform_(m.weight)
+            nn.init.zeros_(m.bias)
+    for cell in (model.cell1, model.cell2):
+        nn.init.ones_(cell.conv.bias[cell.hid_ch:2 * cell.hid_ch])
+    return model
+
+
 def model_d():
-    """Model D: model A on an 8x8 fold (8x8 grid); one 3x3 hop moves 8 px instead of 4."""
-    return ConvLSTMForecaster(patch=8, hidden=64, kernel_size=3, dilations=(1, 1))
+    """Model D: model A on an 8x8 fold (8x8 grid); one 3x3 hop moves 8 px instead of 4.
+
+    With PyTorch's default init, seed 0 stalled at a constant grey output, so D uses xavier_forget1_.
+    """
+    return xavier_forget1_(ConvLSTMForecaster(patch=8, hidden=64, kernel_size=3, dilations=(1, 1)))
 
 
 def build(arch):
