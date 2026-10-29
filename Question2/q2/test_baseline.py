@@ -81,9 +81,9 @@ def figure4(videos):
     for ax, T in zip(axes, ("M", "R")):
         c = np.array(m[f"per_video_C_{T}"])
         ax.hist(c, bins=40, color="tab:blue" if T == "M" else "tab:orange", edgecolor="k")
-        for i in videos[T]:
+        for j, i in enumerate(videos[T]):  # labels staggered so nearby markers stay readable
             ax.axvline(c[i], color="tab:red", ls="--")
-            ax.annotate(str(9000 + i), (c[i], ax.get_ylim()[1] * 0.85), rotation=90, fontsize=7,
+            ax.annotate(str(9000 + i), (c[i], ax.get_ylim()[1] * (0.85 - 0.3 * j)), rotation=90, fontsize=7,
                         ha="right", color="tab:red")
         ax.set_xlabel(f"per-video $C_{T}$")
         ax.set_ylabel("number of test videos")
