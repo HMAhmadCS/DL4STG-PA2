@@ -1,0 +1,12 @@
+A_s1: {'arch': 'A', 'speed_aug': False, 'sym_aug': False}, params=480784, threads=3
+A_s1 epoch  1 train 0.04777 val 0.03937 time 536.0s
+A_s1 epoch  2 train 0.03997 val 0.03912 time 597.3s
+A_s1 epoch  3 train 0.03964 val 0.03878 time 531.0s
+A_s1 epoch  4 train 0.03916 val 0.03797 time 595.2s
+A_s1 epoch  5 train 0.03745 val 0.03600 time 562.0s
+A_s1 epoch  6 train 0.03502 val 0.03352 time 571.0s
+A_s1 epoch  7 train 0.03316 val 0.03187 time 555.2s
+A_s1 epoch  8 train 0.03192 val 0.03110 time 591.5s
+A_s1 epoch  9 train 0.03079 val 0.03081 time 574.0s
+A_s1 epoch 10 train 0.03004 val 0.02923 time 590.2s
+A_s1 epoch 11 train 0.02922 val 0.02869 time 574.7s

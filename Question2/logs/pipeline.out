@@ -1,0 +1,81 @@
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+A 0 {'E5_1x': 0.0228410791605711, 'E2_1x': 0.019250955432653427, 'C_M': 0.0014839617069810629, 'E_M': 0.023401403799653053, 'C_R': 0.0024332962930202484, 'E_R': 0.024271465837955475, 'E2_2x': 0.04276108369231224, 'E5_2x': 0.04591817781329155, 'E2_3x': 0.05048026889562607, 'params': 480784}
+  timing 7.82690508199812
+A 1 {'E5_1x': 0.021929798647761345, 'E2_1x': 0.01853839121758938, 'C_M': 0.0016400200547650456, 'E_M': 0.022573724389076233, 'C_R': 0.00306876958347857, 'E_R': 0.023807642981410027, 'E2_2x': 0.04500948265194893, 'E5_2x': 0.0493241623044014, 'E2_3x': 0.052209511399269104, 'params': 480784}
+  timing 7.832398258999092
+Blank None {'E5_1x': 0.042563606053590775, 'E2_1x': 0.04258999973535538, 'C_M': 0.0, 'E_M': 0.042563606053590775, 'C_R': 0.0, 'E_R': 0.042563606053590775, 'E2_2x': 0.0425109826028347, 'E5_2x': 0.04254010692238808, 'E2_3x': 0.04258544370532036, 'params': 0}
+CopyLast None {'E5_1x': 0.06408222019672394, 'E2_1x': 0.05479172617197037, 'C_M': 0.0, 'E_M': 0.06408222019672394, 'C_R': 0.0, 'E_R': 0.06408222764730453, 'E2_2x': 0.06606845557689667, 'E5_2x': 0.07188227772712708, 'E2_3x': 0.07025302946567535, 'params': 0}
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+Table 2
+model | MSE1 | MSE2 | MSE3 | MSE4 | MSE5 | E(5) | params
+A | 0.0172 (0.0175, 0.0169) | 0.0206 (0.021, 0.0202) | 0.023 (0.0234, 0.0225) | 0.0247 (0.0253, 0.0242) | 0.0264 (0.027, 0.0259) | 0.0224 (0.0228, 0.0219) | 480784
+Blank | 0.0426 | 0.0426 | 0.0426 | 0.0425 | 0.0425 | 0.0426 | 0
+CopyLast | 0.0492 | 0.0604 | 0.0669 | 0.0708 | 0.0732 | 0.0641 | 0
+saved /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig2_model_A_examples.png videos [9007, 9012, 9851]
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+Table 3
+model | E5_1x | C_M | E_M | C_R | E_R
+A | 0.0224 (0.0228, 0.0219) | 0.00156 (0.00148, 0.00164) | 0.023 (0.0234, 0.0226) | 0.00275 (0.00243, 0.00307) | 0.024 (0.0243, 0.0238)
+Blank | 0.0426 | 0 | 0.0426 | 0 | 0.0426
+CopyLast | 0.0641 | 0 | 0.0641 | 0 | 0.0641
+Table 4
+model | E2_1x | E2_2x | E2_3x | E5_1x | E5_2x
+A | 0.0189 (0.0193, 0.0185) | 0.0439 (0.0428, 0.045) | 0.0513 (0.0505, 0.0522) | 0.0224 (0.0228, 0.0219) | 0.0476 (0.0459, 0.0493)
+CopyLast | 0.0548 | 0.0661 | 0.0703 | 0.0641 | 0.0719
+saved ['/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig3_A_M_9269.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig3_A_M_9256.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig3_A_R_9983.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig3_A_R_9733.png'] ['/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig3_modelA_M_video9269.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig3_modelA_M_video9256.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig3_modelA_R_video9983.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig3_modelA_R_video9733.gif']
+saved /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig4_consistency_hist_A.png
+saved /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig5_speed_A.png
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+B 0 {'E5_1x': 0.02319321781396866, 'E2_1x': 0.01908048801124096, 'C_M': 0.001399110653437674, 'E_M': 0.02316831238567829, 'C_R': 0.0018664466915652156, 'E_R': 0.023147456347942352, 'E2_2x': 0.044788796454668045, 'E5_2x': 0.049595680087804794, 'E2_3x': 0.051576681435108185, 'params': 480784}
+  timing 7.9589023270054895
+B 1 {'E5_1x': 0.021526474505662918, 'E2_1x': 0.018064318224787712, 'C_M': 0.001262290054000914, 'E_M': 0.021599583327770233, 'C_R': 0.001642140094190836, 'E_R': 0.021658772602677345, 'E2_2x': 0.04576897248625755, 'E5_2x': 0.05169996991753578, 'E2_3x': 0.05335588753223419, 'params': 480784}
+  timing 7.875410199994803
+C 0 {'E5_1x': 0.027587944641709328, 'E2_1x': 0.02363906055688858, 'C_M': 0.000741668336559087, 'E_M': 0.027805127203464508, 'C_R': 0.0016093793092295527, 'E_R': 0.028577495366334915, 'E2_2x': 0.029422150924801826, 'E5_2x': 0.033385638147592545, 'E2_3x': 0.033769696950912476, 'params': 480784}
+  timing 7.96096566399865
+C 1 {'E5_1x': 0.026635754853487015, 'E2_1x': 0.022901395335793495, 'C_M': 0.0012292444007471204, 'E_M': 0.02686494030058384, 'C_R': 0.0029990877956151962, 'E_R': 0.02795897237956524, 'E2_2x': 0.028776900842785835, 'E5_2x': 0.03308447450399399, 'E2_3x': 0.03351551294326782, 'params': 480784}
+  timing 7.964862648004782
+D 0 {'E5_1x': 0.025961754843592644, 'E2_1x': 0.023661039769649506, 'C_M': 0.001037408015690744, 'E_M': 0.02620083838701248, 'C_R': 0.0023852267768234015, 'E_R': 0.027409404516220093, 'E2_2x': 0.025960953906178474, 'E5_2x': 0.02958049066364765, 'E2_3x': 0.029220879077911377, 'params': 594496}
+  timing 2.2022334200009936
+D 1 {'E5_1x': 0.025700518861413002, 'E2_1x': 0.023611243814229965, 'C_M': 0.0013060211203992367, 'E_M': 0.02599935233592987, 'C_R': 0.0026810606941580772, 'E_R': 0.027233727276325226, 'E2_2x': 0.02602107636630535, 'E5_2x': 0.02926139533519745, 'E2_3x': 0.029138805344700813, 'params': 594496}
+  timing 2.207787653984269
+DB 0 {'E5_1x': 0.026543376967310905, 'E2_1x': 0.024044645950198174, 'C_M': 0.0016780034638941288, 'E_M': 0.02657657489180565, 'C_R': 0.0016219571698457003, 'E_R': 0.02646942436695099, 'E2_2x': 0.026457155123353004, 'E5_2x': 0.029617229476571083, 'E2_3x': 0.029495902359485626, 'params': 594496}
+  timing 2.1827717809937894
+DB 1 {'E5_1x': 0.026683500036597252, 'E2_1x': 0.02446219138801098, 'C_M': 0.0010614707134664059, 'E_M': 0.02667134627699852, 'C_R': 0.0012818875256925821, 'E_R': 0.02671763487160206, 'E2_2x': 0.02650594338774681, 'E5_2x': 0.02962336130440235, 'E2_3x': 0.029600264504551888, 'params': 594496}
+  timing 2.1920199489977676
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+Table 5
+model | E5_1x | C_M | E_M | C_R | E_R | E2_1x | E2_2x | E2_3x | params | train s/epoch | inference s (1000 videos)
+A | 0.0224 (0.0228, 0.0219) | 0.00156 (0.00148, 0.00164) | 0.023 (0.0234, 0.0226) | 0.00275 (0.00243, 0.00307) | 0.024 (0.0243, 0.0238) | 0.0189 (0.0193, 0.0185) | 0.0439 (0.0428, 0.045) | 0.0513 (0.0505, 0.0522) | 480784 | 207 (210, 203) | 7.83 (7.83, 7.83)
+B | 0.0224 (0.0232, 0.0215) | 0.00133 (0.0014, 0.00126) | 0.0224 (0.0232, 0.0216) | 0.00175 (0.00187, 0.00164) | 0.0224 (0.0231, 0.0217) | 0.0186 (0.0191, 0.0181) | 0.0453 (0.0448, 0.0458) | 0.0525 (0.0516, 0.0534) | 480784 | 204 (204, 205) | 7.92 (7.96, 7.88)
+C | 0.0271 (0.0276, 0.0266) | 9.85e-04 (7.42e-04, 0.00123) | 0.0273 (0.0278, 0.0269) | 0.0023 (0.00161, 0.003) | 0.0283 (0.0286, 0.028) | 0.0233 (0.0236, 0.0229) | 0.0291 (0.0294, 0.0288) | 0.0336 (0.0338, 0.0335) | 480784 | 209 (216, 202) | 7.96 (7.96, 7.96)
+D | 0.0258 (0.026, 0.0257) | 0.00117 (0.00104, 0.00131) | 0.0261 (0.0262, 0.026) | 0.00253 (0.00239, 0.00268) | 0.0273 (0.0274, 0.0272) | 0.0236 (0.0237, 0.0236) | 0.026 (0.026, 0.026) | 0.0292 (0.0292, 0.0291) | 594496 | 59.7 (60, 59.4) | 2.21 (2.2, 2.21)
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+sym-B 0 {'E5_1x': 0.022394509986042976, 'E2_1x': 0.018546517938375473, 'C_M': 9.43835644410115e-17, 'E_M': 0.022394508123397827, 'C_R': 7.60936481853984e-17, 'E_R': 0.022394508123397827, 'E2_2x': 0.04389232397079468, 'E5_2x': 0.04845985397696495, 'E2_3x': 0.05040902644395828, 'params': 480784}
+  timing 64.41809646599359
+sym-B 1 {'E5_1x': 0.020933300256729126, 'E2_1x': 0.01767183095216751, 'C_M': 9.311440468355914e-17, 'E_M': 0.020933298394083977, 'C_R': 7.494819494291457e-17, 'E_R': 0.020933298394083977, 'E2_2x': 0.04488260671496391, 'E5_2x': 0.05016523599624634, 'E2_3x': 0.05200842395424843, 'params': 480784}
+  timing 64.18125156101814
+sym-D 0 {'E5_1x': 0.025979215279221535, 'E2_1x': 0.02375018037855625, 'C_M': 5.819711255933591e-17, 'E_M': 0.025979217141866684, 'C_R': 4.6604513764095153e-17, 'E_R': 0.025979217141866684, 'E2_2x': 0.02595653384923935, 'E5_2x': 0.029386095702648163, 'E2_3x': 0.029055552557110786, 'params': 594496}
+  timing 17.754517086003034
+sym-D 1 {'E5_1x': 0.025618145242333412, 'E2_1x': 0.023606350645422935, 'C_M': 7.002817098156346e-17, 'E_M': 0.02561814710497856, 'C_R': 5.608512854958592e-17, 'E_R': 0.02561814710497856, 'E2_2x': 0.0259644016623497, 'E5_2x': 0.028766971081495285, 'E2_3x': 0.028810253366827965, 'params': 594496}
+  timing 17.64673815999413
+sym-DB 0 {'E5_1x': 0.025846097618341446, 'E2_1x': 0.023701874539256096, 'C_M': 7.212349888249909e-17, 'E_M': 0.025846097618341446, 'C_R': 5.816281434241702e-17, 'E_R': 0.025846097618341446, 'E2_2x': 0.026067685335874557, 'E5_2x': 0.02894238941371441, 'E2_3x': 0.028969651088118553, 'params': 594496}
+  timing 17.716175845005637
+sym-DB 1 {'E5_1x': 0.026163578033447266, 'E2_1x': 0.02411484904587269, 'C_M': 6.019897566849795e-17, 'E_M': 0.026163578033447266, 'C_R': 4.789811174556478e-17, 'E_R': 0.026163578033447266, 'E2_2x': 0.026127494871616364, 'E5_2x': 0.028989538550376892, 'E2_3x': 0.029109444469213486, 'params': 594496}
+  timing 17.785485811997205
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+Table 6
+model | E5_1x | C_M | E_M | C_R | E_R | E2_1x | E2_2x | E2_3x | params | train s/epoch | inference s (1000 videos)
+sym-B | 0.0217 (0.0224, 0.0209) | 9.37e-17 (9.44e-17, 9.31e-17) | 0.0217 (0.0224, 0.0209) | 7.55e-17 (7.61e-17, 7.49e-17) | 0.0217 (0.0224, 0.0209) | 0.0181 (0.0185, 0.0177) | 0.0444 (0.0439, 0.0449) | 0.0512 (0.0504, 0.052) | 480784 | 204 (204, 205) | 64.3 (64.4, 64.2)
+sym-D | 0.0258 (0.026, 0.0256) | 6.41e-17 (5.82e-17, 7.00e-17) | 0.0258 (0.026, 0.0256) | 5.13e-17 (4.66e-17, 5.61e-17) | 0.0258 (0.026, 0.0256) | 0.0237 (0.0238, 0.0236) | 0.026 (0.026, 0.026) | 0.0289 (0.0291, 0.0288) | 594496 | 59.7 (60, 59.4) | 17.7 (17.8, 17.6)
+sym-DB | 0.026 (0.0258, 0.0262) | 6.62e-17 (7.21e-17, 6.02e-17) | 0.026 (0.0258, 0.0262) | 5.30e-17 (5.82e-17, 4.79e-17) | 0.026 (0.0258, 0.0262) | 0.0239 (0.0237, 0.0241) | 0.0261 (0.0261, 0.0261) | 0.029 (0.029, 0.0291) | 594496 | 59.7 (59.8, 59.5) | 17.8 (17.7, 17.8)
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /run/media/hafiz/Shared/DL4STG_PA2 2/.venv, got /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/../.venv
+saved ['/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig6a_final_M_9269.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig6a_final_M_9256.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig6a_final_R_9983.png', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig6a_final_R_9733.png'] ['/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig6a_final_M_video9269.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig6a_final_M_video9256.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig6a_final_R_video9983.gif', '/run/media/hafiz/Shared/DL4STG_PA2 2/Question2/gifs/fig6a_final_R_video9733.gif']
+saved /run/media/hafiz/Shared/DL4STG_PA2 2/Question2/figures/fig6b_speed_final.png

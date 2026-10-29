@@ -1,0 +1,36 @@
+C_s0: {'arch': 'A', 'speed_aug': True, 'sym_aug': False}, params=480784, threads=12
+C_s0 epoch  1 train 0.04659 val 0.03937 time 200.7s
+C_s0 epoch  2 train 0.03991 val 0.03884 time 200.0s
+C_s0 epoch  3 train 0.03939 val 0.03804 time 199.8s
+C_s0 epoch  4 train 0.03865 val 0.03738 time 242.9s
+C_s0 epoch  5 train 0.03779 val 0.03646 time 274.8s
+C_s0 epoch  6 train 0.03693 val 0.03466 time 273.7s
+C_s0 epoch  7 train 0.03619 val 0.03489 time 243.1s
+C_s0: {'arch': 'A', 'speed_aug': True, 'sym_aug': False}, params=480784, threads=12
+C_s0: resumed after epoch 7
+C_s0: {'arch': 'A', 'speed_aug': True, 'sym_aug': False}, params=480784, threads=12
+C_s0: resumed after epoch 7
+C_s0 epoch  8 train 0.03556 val 0.03326 time 265.9s
+C_s0 epoch  9 train 0.03510 val 0.03287 time 222.7s
+C_s0 epoch 10 train 0.03465 val 0.03260 time 226.3s
+C_s0 epoch 11 train 0.03424 val 0.03239 time 220.4s
+C_s0 epoch 12 train 0.03388 val 0.03135 time 229.6s
+C_s0 epoch 13 train 0.03353 val 0.03102 time 219.3s
+C_s0 epoch 14 train 0.03328 val 0.03075 time 209.8s
+C_s0 epoch 15 train 0.03304 val 0.03044 time 206.3s
+C_s0 epoch 16 train 0.03288 val 0.03031 time 207.2s
+C_s0 epoch 17 train 0.03266 val 0.02993 time 205.1s
+C_s0 epoch 18 train 0.03254 val 0.03019 time 205.4s
+C_s0 epoch 19 train 0.03235 val 0.02972 time 206.4s
+C_s0 epoch 20 train 0.03219 val 0.02983 time 210.0s
+C_s0 epoch 21 train 0.03213 val 0.02925 time 209.1s
+C_s0 epoch 22 train 0.03203 val 0.02905 time 208.3s
+C_s0 epoch 23 train 0.03182 val 0.02925 time 204.4s
+C_s0 epoch 24 train 0.03177 val 0.02841 time 198.0s
+C_s0 epoch 25 train 0.03157 val 0.02852 time 197.7s
+C_s0 epoch 26 train 0.03143 val 0.02810 time 198.4s
+C_s0 epoch 27 train 0.03128 val 0.02783 time 198.4s
+C_s0 epoch 28 train 0.03109 val 0.02820 time 198.8s
+C_s0 epoch 29 train 0.03103 val 0.02727 time 198.7s
+C_s0 epoch 30 train 0.03085 val 0.02727 time 199.9s
+C_s0 done; mean epoch time 216.0s
