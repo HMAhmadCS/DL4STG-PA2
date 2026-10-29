@@ -1,0 +1,53 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue!60!black, urlcolor=blue!60!black}
+\graphicspath{{../Question2/figures/}}
+
+\title{AI651 -- Deep Learning for Space, Time and Graphs\\Assignment 2}
+\author{Hafiz Muhammad Ahmad (25030011)\\[4pt]
+\normalsize GitHub repository: \url{https://github.com/HMAhmadCS/DL4STG-PA2}}
+\date{Fall 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%======================================================================
+\part*{Question 1 -- River Forecasting Proposal}
+\addcontentsline{toc}{part}{Question 1 -- River Forecasting Proposal}
+%======================================================================
+\input{../Question1/report/sections/1_architecture}
+\input{../Question1/report/sections/2_assumptions}
+\input{../Question1/report/sections/3_task_data}
+\input{../Question1/report/sections/4_model}
+\input{../Question1/report/sections/5_operation}
+\input{../Question1/report/sections/6_uncertainty}
+
+\newpage
+%======================================================================
+\part*{Question 2 -- Motion or Memory?}
+\addcontentsline{toc}{part}{Question 2 -- Motion or Memory?}
+%======================================================================
+\setcounter{section}{0}
+% Unique hyperlink targets for Question 2's restarted section, table and figure numbers.
+\renewcommand{\theHsection}{q2.\arabic{section}}
+\renewcommand{\theHtable}{q2.\arabic{table}}
+\renewcommand{\theHfigure}{q2.\arabic{figure}}
+\input{q2}
+
+\end{document}

@@ -26,10 +26,18 @@ Thumbs.db
 data/
 
 # Question 2 training artefacts, logs and generated results
-/Question2/checkpoints/
-/Question2/logs/
+# Final trained models and training logs are tracked; resume checkpoints, run markers and stderr are not
+/Question2/checkpoints/*_last.pt
+/Question2/checkpoints/old_init/
+/Question2/logs/**/*.err
+/Question2/logs/**/control/
+/Question2/logs/**/pause_log.txt
+/Question2/logs/*_DONE
+!/Question2/logs/**/*.out
+!/Question2/logs/pipeline.log
 /Question2/results/
 /Question2/figures/
 
-# Combined submission report (kept outside version control)
-/report/
+# Combined submission report: sources tracked, PDF and build output not
+/report/*.pdf
+/report/build.log

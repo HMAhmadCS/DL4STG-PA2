@@ -6,11 +6,11 @@ rotation and speed-up.
 ## Setup
 
 ```bash
-cd Question2
-python -m venv .venv
-.venv/Scripts/activate          # Windows; use .venv/bin/activate on Linux/macOS
+python -m venv .venv            # at the repository root: run_all.sh uses ../.venv
+.venv/Scripts/activate          # Windows; use source .venv/bin/activate on Linux/macOS
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements.txt
+pip install -r Question2/requirements.txt
+cd Question2
 ```
 
 Moving MNIST is downloaded to `Question2/data/` by `torchvision.datasets.MovingMNIST(split=None)`.
@@ -60,5 +60,9 @@ python -m q2.latex_tables                     # report/tables/table1-6.tex
 `sh run_all.sh` runs all of this in order with 12 threads and waits for the Q2.11 commit before
 training B-D.
 
-Generated tables (`results/`), figures (`figures/`), checkpoints and training logs are not tracked;
-the GIFs (`gifs/`) are.
+The final trained models (`checkpoints/{A,B,C,D,DB}_s{0,1}.pt`) and the training logs (`logs/`) are
+tracked, so every table and figure can be regenerated without retraining: skip the `q2.train` lines.
+`logs/old_init/` holds the first D and D+B runs with PyTorch's default initialisation (D seed 0 stalled at
+a constant output; see Q2.12 in the report), and `logs/interrupted_windows/` an earlier, interrupted start
+of model A on Windows. Generated tables (`results/`) and figures (`figures/`) are not tracked; the GIFs
+(`gifs/`) are.

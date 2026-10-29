@@ -1,0 +1,234 @@
+%======================================================================
+\section{What Can Data Fix?}
+%======================================================================
+Models B, C, D and the optional D+B are trained with exactly the protocol of model A
+(\path{q2/train.py}, configurations \texttt{B}, \texttt{C}, \texttt{D}, \texttt{DB}). B draws
+$g\in G$ uniformly for every training window and applies it to input and target. C, D and D+B draw
+$k\in\{1,2,3\}$ uniformly and then the start frame uniformly from the allowed starts for that $k$; D+B
+also draws $g$. Training videos with only two existing targets contribute equally, through the masked loss.
+
+\qa{11} \emph{Included exactly as first written. It was committed (\texttt{Question2/predictions/Q2\_11.md},
+commit \texttt{20f3c69}, 2026-10-29 04:28 PKT) after the Section~3 results and before any of B--D was trained
+(B seed 0 started at 04:29 PKT).}
+
+\begin{quote}\small
+Model B (symmetry augmentation) will shrink C\_M and C\_R several-fold and bring E\_M and
+E\_R down to its E(5) at 1x, but will not change the speed failure. Model C (speed augmentation) will
+largely fix 2x, where the motion (about 6.6 px per step) is still within model A's 8 px reach, but only
+partly fix 3x (about 10 px per step, beyond that reach), and will not change the consistency gaps.
+Model D (reach 16 px plus speed augmentation) will also fix 3x, bringing E(2) at 3x close to its value at
+2x at a small cost in E(5) at 1x from the coarser 8x8 grid, while its consistency gaps stay nonzero like
+those of A and C.
+\end{quote}
+
+\begin{table}[H]
+\centering
+\caption{Models A--D and the optional D+B on the test set. $C_T$ and $E_T$ at 1$\times$; $\Ex2$ uses the
+first two horizons. Training time is the mean wall-clock time per epoch over 30 epochs; inference time is
+for all 1,000 test videos at batch 32 (hardware in the introduction to this question).}
+\label{tab:q2-t5}
+\resizebox{\linewidth}{!}{\input{tables/table5}}
+\end{table}
+
+\qa{12} \emph{Model D} is model A with a coarser fold: \texttt{pixel\_unshuffle}$(x,8)$ turns a
+$1\times64\times64$ frame into $64\times8\times8$. Everything else is unchanged: two peephole-free
+ConvLSTM layers with 64 hidden channels and $3\times3$ kernels (stride 1, padding 1), a $1\times1$
+convolution from 64 to 64 channels, \texttt{pixel\_shuffle}$(\cdot,8)$, a sigmoid, the same 9-step
+closed-loop rollout without teacher forcing, and the same training protocol (with speed augmentation, as
+in its row of the model table). Its parameters are $2\times\big[(64+64)\cdot4\cdot64\cdot9+256\big]$ for the
+two ConvLSTM layers plus $64\cdot64+64$ for the output: \textbf{594,496}, i.e.\ $1.24\times$ model A and
+under the 721,176 limit.
+\emph{Reach.} The same path argument as in Q2.3 applies, but one cell of the $8\times8$ grid is now
+8 original pixels. From $u_\tau$, or from $h^{(1)}_{\tau-1}$, a path crosses layer~1's and layer~2's
+$3\times3$ convolutions: 2 cells $=16$\,px. From $h^{(2)}_{\tau-1}$ it crosses only layer~2's: 8\,px.
+The $1\times1$ convolution and the (un)shuffles move nothing. The reach is therefore \textbf{16\,px per
+step} along a row or column ($16\sqrt2\approx22.6$\,px diagonally), strictly larger than model A's 8\,px.
+It covers the 3$\times$ median of 10\,px/frame and its 95th percentile of 13\,px.
+\emph{Why this design.} A bigger patch doubles the reach of every convolution without adding layers, and
+the cost per step goes down (an $8\times8$ grid instead of $16\times16$). A dilation of 2 would give the
+same 16\,px at A's parameter count, but each hop could then reach only even cell offsets, leaving gaps in
+the neighbourhood. $5\times5$ kernels at 64 channels would exceed the parameter limit. The price of the
+coarser fold is spatial detail: each state cell must now represent and decode an $8\times8$ patch from 64
+channels, which may cost sharpness at 1$\times$. The design was fixed a priori from this reach calculation.
+No candidate designs were compared, so neither the validation nor the test split influenced it.
+\emph{Initialisation.} With PyTorch's default initialisation (the one model A uses), seed~0 of model D
+never left a constant output: from the first epoch it predicted the same faint grey value (about 0.05) at every
+pixel, whatever the input, and its validation loss stayed at 0.03947 for all 30 epochs. Seed~1
+trained normally (validation loss 0.0267 after 30 epochs). I therefore changed model D's initialisation,
+for both seeds and for D+B: Xavier-uniform weights in every convolution, zero biases, and forget-gate
+biases of 1 in both ConvLSTM cells, so that cell state and gradients pass through the recurrence from
+the first step (\texttt{xavier\_forget1\_} in \texttt{q2/models.py}). All four D and D+B runs were then
+retrained from scratch with seeds 0 and 1; every D and D+B number in this report comes from them. The decision used
+only the training curve of the failed run, not the test split. The training logs of the first runs are in \path{Question2/logs/old_init/}. With the $8\times8$ grid, an epoch also takes
+about 60\,s instead of about 205\,s (Table~\ref{tab:q2-t5}): the convolutions run on 4 times fewer
+positions, with only slightly more input channels per position in layer~1.
+
+\qa{13} The three failures from Testing the Baseline get three different labels.
+
+\emph{The consistency gaps under $M$ and $R$: appearance.} Showing the model transformed digits fixes them,
+and showing it more speeds does not. Model B (symmetry augmentation, nothing else changed) brings both
+transformed errors down to its ordinary error: $E_M=E_R=\Ex5=0.0224$ at 1$\times$, against
+$E_M=0.0230$ and $E_R=0.0240$ for A. Its $C_R$ drops by a third ($0.00275\to0.00175$) and $C_M$ by a sixth
+($0.00156\to0.00133$). Speed augmentation does not do this: for C and D, $E_R$ stays 0.0012--0.0015 above $\Ex5$,
+as for A (0.0016), and $C_R$ stays at 0.0023--0.0025. Adding symmetry augmentation to D (D+B) closes the gap
+again: $E_R=E_M=\Ex5=0.0266$ and $C_R=0.00145$. By Q2.1--Q2.2, every mirrored or rotated motion already
+occurs in training, so what B adds is mainly how transformed digits look: the label is appearance.
+
+\emph{The failure at 2$\times$: unfamiliar motion.} Model C has model A's architecture and reach and
+differs only in its training speeds. It lowers $\Ex2$ at 2$\times$ from 0.0439 to 0.0291, much closer to
+its own 0.0233 at 1$\times$ than to A's failure. The 2$\times$ motion is within A's 8\,px reach, so
+the only thing that changed is that the model has now seen it. In the Figure~5 video, model C moves the
+digits 4.6\,px at $h=1$ instead of model A's 1.8--2.5\,px (true 7.3--7.6\,px).
+
+\emph{The failure at 3$\times$: mostly unfamiliar motion, partly architectural reach.} Model C also lowers
+$\Ex2$ at 3$\times$, from 0.0513 to 0.0336. So most of the 3$\times$ failure was unfamiliar motion too:
+model C does not ``still do badly'' at 3$\times$. Model D changes only the reach relative to C and lowers
+it further to 0.0292, and it also lowers 2$\times$ to 0.0260. Relative to its own 1$\times$ error, model D
+loses 24\,\% at 3$\times$ ($0.0236\to0.0292$) where C loses 44\,\% ($0.0233\to0.0336$). The part of the
+3$\times$ failure that remains in C is therefore architectural reach. More data cannot carry information
+further: the reach is a property of the computation graph. A predicted pixel at step $\tau+1$ is a
+function of only the input pixels within 8\,px (for A and C), whatever the weights are, and training data
+can only change the weights. A digit that moves 10\,px per frame arrives where nothing in the previous frame
+could tell the model it was coming. C can only partly work around this: a digit is about 20\,px wide, so
+most of its new position still lies within 8\,px of its old pixels, and the recurrent state already
+holds its velocity from earlier frames. C can therefore smear the digit in the direction of motion, but it
+cannot place the leading edge exactly. The positions in the Figure~5 video show both effects. At 2$\times$,
+$h=2$, model D places the two digits 0.5 and 1.3\,px from the truth, while C is 3.5 and 7.7\,px off and
+its blobs fade (45 and 61 pixels above 0.2, against 83--86 in the truth). At 3$\times$, $h=1$, both C and D move the lower digit 8.0--8.4\,px (true 11.2\,px), and both miss the
+upper digit's bounce off the top wall; by $h=2$ C merges the two digits into one blob by $h=2$, whereas D keeps them apart.
+One caveat: D also coarsens the grid, so the reach is not the only thing that differs between C and D.
+D is also better than C at 1$\times$ (0.0258 vs 0.0271), where reach does not limit either model.
+
+\qa{14} Yes. Speed augmentation costs accuracy on the original 1$\times$ clips, and symmetry
+augmentation does not. $\Ex5$ at 1$\times$ is 0.0224 for A and 0.0224 for B, but 0.0271 for C
+(+21\,\%), 0.0258 for D (+15\,\%) and 0.0266 for D+B (+19\,\%), consistently in both seeds; $\Ex2$ at
+1$\times$ rises from 0.0189 to 0.0233--0.0243. The cost comes from the speed augmentation, not from the
+coarser grid of D: D is better than C at 1$\times$. Only a third of the training windows are now at 1$\times$,
+and predictions at 1$\times$ are visibly blurrier (compare the top rows of Figure~\ref{fig:q2-f5}, model A, and
+Figure~\ref{fig:q2-f6}b, the final model). A model that must cover
+three speeds also has more ways to hedge between them. Averaged over the three speeds, $\Ex2$ falls from
+0.0380 (A) to 0.0263 (D), a 31\,\% improvement, and at 2$\times$ and 3$\times$ model A is no better than
+predicting a blank frame. If the forecaster only ever sees clips at the original speed, the change is not
+worth it: A or B is the better model. As a forecaster of motion in general, which is the point of this
+question, it is worth it: D trades a 15\,\% loss at 1$\times$ for a 41--43\,\% gain at 2$\times$ and
+3$\times$.
+
+\emph{How the Q2.11 prediction fared.} Mostly right, with two misses. B did bring $E_M$ and $E_R$ down to its
+$\Ex5$ at 1$\times$ and did not change the speed failure, but it shrank $C_M$ and $C_R$ by 15\,\% and
+36\,\%, not ``several-fold''. C largely fixed 2$\times$ and partly fixed 3$\times$, as predicted; its
+consistency gaps stayed of the same size as A's ($C_M$ even fell somewhat). D brought $\Ex2$ at 3$\times$
+(0.0292) close to 2$\times$ (0.0260), with gaps still nonzero, as predicted. But its cost at 1$\times$ came
+from the speed augmentation it shares with C, not from the coarser grid.
+
+%======================================================================
+\section{The Final Model}
+%======================================================================
+\emph{The symmetrised forecaster is exactly consistent.} Let $T\in G$, and recall that every $g\in G$
+acts on frames as a pixel permutation, so it is linear and commutes with averaging. Then
+\[
+\bar f(TX)=\frac18\sum_{g\in G} g^{-1} f(gTX)
+=\frac18\sum_{g'\in G}T\,g'^{-1} f(g'X)=T\Big(\frac18\sum_{g'\in G}g'^{-1}f(g'X)\Big)=T\bar f(X),
+\]
+substituting $g'=gT$. As $g$ runs over $G$, so does $g'$, because $G$ is a group; and
+$g^{-1}=(g'T^{-1})^{-1}=Tg'^{-1}$. Hence $\bar f(T(X))=T(\bar f(X))$ for every input, and
+$C_T=\mathrm{MSE}\big(\bar f(T(X)),T(\bar f(X))\big)=0$ for $T=M$ and $T=R$ (and every other element of
+$G$), whatever $f$ is. In floating point, the two sides add the same eight terms in a different order,
+so the measured gaps are rounding errors only (Table~\ref{tab:q2-t6}). The implementation is
+\texttt{Symmetrised} in \texttt{q2/models.py}; inference timing includes the eight transformations, the
+eight forward passes, the inverse transformations and the averaging.
+
+\emph{Choice of final model: symmetrised D.} The default is model D, and Table~\ref{tab:q2-t5} does not
+make a case for D+B. Symmetry augmentation on top of D buys learned consistency ($C_R$ $0.00253\to0.00145$,
+$E_R$ $0.0273\to0.0266$ at 1$\times$), but it costs ordinary accuracy at 1$\times$ ($\Ex5$
+$0.0258\to0.0266$, in both seeds) and gains nothing at 2$\times$ or 3$\times$ (0.0260 vs 0.0265,
+0.0292 vs 0.0295). Once wrapped, any model is exactly consistent, so what D+B adds is redundant.
+Table~\ref{tab:q2-t6} confirms this: $\bar f$(D) and $\bar f$(D+B) differ by at most 0.0002 in every
+error column, with $\bar f$(D) slightly ahead at 1$\times$ (0.0258 vs 0.0260), at the same parameter count and cost.
+
+\begin{table}[H]
+\centering
+\caption{Symmetrised forecasters $\bar f$ built from the seed-0 and seed-1 models B, D and D+B. Training time is
+that of the underlying learned model (symmetrisation needs no training); inference time includes all
+eight transformed forward passes.}
+\label{tab:q2-t6}
+\resizebox{\linewidth}{!}{\input{tables/table6}}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{fig6a_final_M_9269.png}\\[2pt]
+\includegraphics[width=0.92\linewidth]{fig6a_final_M_9256.png}
+\caption[Final model, Figure 3 and Figure 5 repeated]{(a) Figure~\ref{fig:q2-f3} repeated with the final
+model (symmetrised D, seed 0) on the same videos: $T=M$, videos 9269 (top) and 9256 (bottom); continued
+below. Rows as in Figure~\ref{fig:q2-f3}. GIFs: \path{Question2/gifs/fig6a_final_M_video9269.gif},
+\path{Question2/gifs/fig6a_final_M_video9256.gif}, \path{Question2/gifs/fig6a_final_R_video9983.gif},
+\path{Question2/gifs/fig6a_final_R_video9733.gif}.}
+\label{fig:q2-f6}
+\end{figure}
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=0.92\linewidth]{fig6a_final_R_9983.png}\\[2pt]
+\includegraphics[width=0.92\linewidth]{fig6a_final_R_9733.png}
+\caption{(continued) (a) $T=R$, videos 9983 (top) and 9733 (bottom). Rows 3 and 4 now coincide, because
+$\bar f(R(X))=R(\bar f(X))$.}
+\end{figure}
+\begin{figure}[H]
+\ContinuedFloat
+\centering
+\includegraphics[width=\linewidth]{fig6b_speed_final.png}
+\caption{(continued) (b) Figure~\ref{fig:q2-f5} repeated with the final model (symmetrised D, seed 0) on test
+video 9021 at 1$\times$, 2$\times$ and 3$\times$ ($t=1$).}
+\end{figure}
+
+Measured in the same way as for model A in Q2.9 (\texttt{python -m q2.positions sym-D}), the final model
+follows the digits of Figure~\ref{fig:q2-f6}b. At 1$\times$ both digits are within 1.3\,px of the truth at
+$h=1$ (model A: within 0.5\,px). At $h=2$ it also misses the 1's bounce off the left wall, but by less
+(4.1\,px, model A 6.2\,px). At 2$\times$ it is within 1.5\,px at $h=1$ and within 1.8\,px at $h=2$,
+where model A was 4.9--8.8\,px off. At 3$\times$, $h=1$, it moves the lower digit 7.8\,px of the true
+11.2\,px (4.7\,px off) and the upper digit, which bounces off the top wall, ends 3.2\,px off. Its blobs
+are larger than A's at 1$\times$, but smaller at 2$\times$ and 3$\times$.
+
+\qa{15} \emph{Consistency.} Built-in symmetry is exact and learned symmetry is not. Symmetrised B has
+$C_M=9.4\times10^{-17}$ and $C_R=7.6\times10^{-17}$, rounding error in single precision, against
+$C_M=0.00133$ and $C_R=0.00175$ for model B itself, which is only somewhat lower than model A. The
+argument above shows why: the group average makes $\bar f(T(X))=T(\bar f(X))$ an identity that holds for
+every input and every set of weights. Augmentation only rewards the network for being \emph{right} on
+transformed clips, on average over the training data. Nothing ties its prediction for $T(X)$ to its
+prediction for $X$, and with finite capacity and training it reaches neither on unseen videos.
+\emph{Accuracy.} On transformed clips, $E_M=E_R=\Ex5$ for every wrapped model, by construction. On the
+original clips, wrapping did not cost accuracy anywhere: $\Ex5$ at 1$\times$ goes from 0.0224 to 0.0217
+for B ($-3\,\%$, both seeds), stays at 0.0258 for D, and goes from 0.0266 to 0.0260 for D+B. For D, the
+transformed errors fall from 0.0261 ($M$) and 0.0273 ($R$) to 0.0258. $\Ex2$ at 2$\times$ and 3$\times$
+changes by at most 0.0009.
+\emph{Inference cost.} Wrapping costs eight forward passes: 7.92\,s to 64.3\,s for B and 2.21\,s to 17.7\,s
+for D on the 1,000 test videos (about $8\times$), with no training.
+\emph{Blur.} The average of eight predictions is blurred wherever they disagree. Because MSE is convex,
+the wrapped forecaster's error is never larger than the mean of the eight transformed errors $E_g$ of
+$f$. It can, however, be larger than $f$'s own error on the original clips, if $f$ is much better on
+untransformed clips than on transformed ones, i.e.\ when $E_T\gg\Ex5$. That is the case for a model trained without
+symmetry augmentation whose motion rule depends on appearance (model A, $E_R-\Ex5=0.0016$), and for
+videos where the eight views give different positions. Here it did not hurt: the gaps $E_T-\Ex5$ of B
+and D are small, and $\Ex5$ at 1$\times$ improved or stayed the same, so the blurring averages out
+errors more than it smears correct predictions. The largest change for the worse in any column is $+0.0001$ ($\Ex2$ at
+1$\times$ for D).
+\qa{16} Only partly. In Q2.7 the failure on video 9983 ($T=R$) had two parts: the two accounts of
+the motion disagreed (rows 3 and 4 of Figure~\ref{fig:q2-f3}c), and neither one separated the overlapping
+3 and 0. The first part is fixed. In Figure~\ref{fig:q2-f6}a (video 9983), rows 3 and 4 are identical, and
+the video's $C_R$ is 0 up to rounding (model A, seed 0: 0.00502). The change that fixed it is the symmetrisation; symmetry
+augmentation alone (model B) only reduced it to 0.00216. The second part is not fixed. The final model still
+predicts one tall blob that drifts slightly downwards and fades, while the true digits separate and move
+to the lower left. On this video it is no more accurate than model A: its error is 0.0338 on both the
+original and the rotated clip, against 0.0292 and 0.0335 for model A. The speed augmentation made this
+1$\times$ video worse: model C gives 0.0361 and model D 0.0330 on the original clip. This matches Q2.14.
+None of the changes addresses what makes this video hard: two overlapping, curly digits whose appearance
+does not tell the model where each one is.
+\qa{17} Partly. The final model learned a motion rule that transfers across speeds and, by construction,
+across all eight symmetries. It is not a persistence or blank predictor: at 3$\times$ its $\Ex2$ is 0.0289,
+against 0.0703 for Copy-last and 0.0426 for Blank, and at 2$\times$ its digits move almost the true
+distance (Figure~\ref{fig:q2-f6}b). To convince a skeptic, I would measure centroid tracking errors over
+the whole test set, per digit, horizon and speed, including wall bounces, against Copy-last and
+constant-velocity extrapolation. I would also test an unseen speed such as 4$\times$, where a learned rule
+should degrade gracefully instead of stalling as model A did at 3$\times$. One test it has not passed is
+keeping digits intact: overlapping digits merge into one blob (video 9983), bounces are missed at
+3$\times$, and by $h=5$ every prediction is a blurred shape rather than a digit.
